@@ -1,4 +1,8 @@
+import CodeMirror from 'codemirror'
+import { toPng } from 'html-to-image'
+import { v4 as uuid } from 'uuid'
 import DEFAULT_CONTENT from '@/assets/example/markdown.md?raw'
+
 import DEFAULT_CSS_CONTENT from '@/assets/example/theme-css.txt?raw'
 import {
   altKey,
@@ -9,19 +13,18 @@ import {
 } from '@/config'
 import {
   addPrefix,
+  downloadFile,
   downloadMD,
   exportHTML,
+  exportPDF,
+  exportPureHTML,
   formatDoc,
   sanitizeTitle,
 } from '@/utils'
-
 import { css2json, customCssWithTemplate, customizeTheme, postProcessHtml, renderMarkdown } from '@/utils/'
 import { copyPlain } from '@/utils/clipboard'
-import { initRenderer } from '@/utils/renderer'
-import CodeMirror from 'codemirror'
-import { toPng } from 'html-to-image'
 
-import { v4 as uuid } from 'uuid'
+import { initRenderer } from '@/utils/renderer'
 
 /**********************************
  * Post 结构接口
@@ -581,6 +584,11 @@ export const useStore = defineStore(`store`, () => {
     document.querySelector(`#output`)!.innerHTML = output.value
   }
 
+  // 导出编辑器内容为无样式 HTML
+  const exportEditorContent2PureHTML = () => {
+    exportPureHTML(editor.value!.getValue(), posts.value[currentPostIndex.value].title)
+  }
+
   // 下载卡片
   const downloadAsCardImage = async () => {
     const el = document.querySelector<HTMLElement>(`#output-wrapper>.preview`)!
@@ -593,12 +601,13 @@ export const useStore = defineStore(`store`, () => {
       },
     })
 
-    const a = document.createElement(`a`)
-    a.download = sanitizeTitle(posts.value[currentPostIndex.value].title)
-    document.body.appendChild(a)
-    a.href = url
-    a.click()
-    document.body.removeChild(a)
+    downloadFile(url, `${sanitizeTitle(posts.value[currentPostIndex.value].title)}.png`, `image/png`)
+  }
+
+  // 导出编辑器内容为 PDF
+  const exportEditorContent2PDF = () => {
+    exportPDF(primaryColor.value, posts.value[currentPostIndex.value].title)
+    document.querySelector(`#output`)!.innerHTML = output.value
   }
 
   // 导出编辑器内容到本地
@@ -630,6 +639,20 @@ export const useStore = defineStore(`store`, () => {
     }
     catch (error) {
       console.log(`粘贴失败`, error)
+    }
+  }
+
+  // 撤销操作
+  const undo = () => {
+    if (editor.value) {
+      editor.value.undo()
+    }
+  }
+
+  // 重做操作
+  const redo = () => {
+    if (editor.value) {
+      editor.value.redo()
     }
   }
 
@@ -684,7 +707,9 @@ export const useStore = defineStore(`store`, () => {
 
     formatContent,
     exportEditorContent2HTML,
+    exportEditorContent2PureHTML,
     exportEditorContent2MD,
+    exportEditorContent2PDF,
     downloadAsCardImage,
 
     importDefaultContent,
@@ -692,6 +717,9 @@ export const useStore = defineStore(`store`, () => {
 
     copyToClipboard,
     pasteFromClipboard,
+
+    undo,
+    redo,
 
     isOpenConfirmDialog,
     resetStyleConfirm,

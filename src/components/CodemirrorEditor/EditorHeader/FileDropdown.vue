@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Download, FileCode, FileCog, FileText, Upload } from 'lucide-vue-next'
 import { useStore } from '@/stores'
-import { Download, FileCode, FileCog, Upload } from 'lucide-vue-next'
 
 const store = useStore()
 
@@ -11,8 +11,10 @@ const {
 
 const {
   exportEditorContent2HTML,
+  exportEditorContent2PureHTML,
   exportEditorContent2MD,
   downloadAsCardImage,
+  exportEditorContent2PDF,
 } = store
 
 const editorStateDialogVisible = ref(false)
@@ -37,6 +39,14 @@ const importMarkdownContent = useImportMarkdownContent()
       <MenubarItem @click="exportEditorContent2HTML()">
         <FileCode class="mr-2 size-4" />
         导出 .html
+      </MenubarItem>
+      <MenubarItem @click="exportEditorContent2PureHTML()">
+        <FileCode class="mr-2 size-4" />
+        导出 .html（无样式）
+      </MenubarItem>
+      <MenubarItem @click="exportEditorContent2PDF()">
+        <FileText class="mr-2 size-4" />
+        导出 .pdf
       </MenubarItem>
       <MenubarItem @click="downloadAsCardImage()">
         <Download class="mr-2 size-4" />
